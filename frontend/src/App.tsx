@@ -12,9 +12,9 @@ import type { ViewTab, Market, MarketFilter } from './types';
 function App() {
   const [activeTab, setActiveTab] = useState<ViewTab>('all');
   const [filter, setFilter] = useState<MarketFilter>({
-    sort_by: 'liquidity',
+    sort: 'volume',
     sort_order: 'desc',
-    limit: 100,
+    limit: 20,
   });
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -22,7 +22,7 @@ function App() {
   const { markets, loading, error, lastUpdated, refresh } = useMarkets({
     tab: activeTab,
     filter,
-    refreshInterval: 30000,
+    refreshInterval: 120000,
   });
 
   const handleTabChange = (tab: string) => {

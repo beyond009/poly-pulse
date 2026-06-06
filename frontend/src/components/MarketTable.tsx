@@ -55,42 +55,40 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
           </thead>
           <tbody className="divide-y divide-gray-200">
             {markets.map((market) => {
-              // Try to get price from tokens array first, fallback to other fields
-              const yesToken = market.tokens?.find(t => t.outcome === 'Yes' || t.outcome === 'Yes, Yes');
-              const priceFromToken = yesToken?.price;
-              const priceFromLast = market.last_price;
-              const priceFromYesBid = market.yes_bid;
-              const priceFromYesAsk = market.yes_ask;
-              const currentPrice = priceFromToken ?? priceFromLast ?? priceFromYesBid ?? priceFromYesAsk ?? 0;
-              const priceChange = market.one_day_price_change ?? 0;
-              const spread = market.spread ?? (market.yes_ask && market.yes_bid ? market.yes_ask - market.yes_bid : 0);
+              const currentPrice = market.yes?.price ?? market.outcomes[0]?.price ?? 0;
+              const priceChange = market.yes?.priceChange24h ?? market.outcomes[0]?.priceChange24h ?? 0;
+              const bestBid = (market.sourceMetadata?.bestBid as number) ?? 0;
+              const bestAsk = (market.sourceMetadata?.bestAsk as number) ?? 0;
+              const spread = (market.sourceMetadata?.spread as number) ?? (bestAsk && bestBid ? bestAsk - bestBid : 0);
 
               return (
                 <tr
-                  key={market.id}
+                  key={market.marketId}
                   onClick={() => onRowClick?.(market)}
                   className="hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {market.image_url && (
+                      {market.image && (
                         <img
-                          src={market.image_url}
+                          src={market.image}
                           alt=""
                           className="w-8 h-8 rounded-lg object-cover"
                         />
                       )}
                       <div className="min-w-0">
                         <div className="font-medium text-gray-900 text-sm truncate max-w-xs">
-                          {market.question}
+                          {market.title}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="px-1.5 py-0.5 bg-gray-100 rounded">
-                            {market.category}
-                          </span>
-                          {market.neg_risk && (
-                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">
-                              Neg Risk
+                          {market.category && (
+                            <span className="px-1.5 py-0.5 bg-gray-100 rounded">
+                              {market.category}
+                            </span>
+                          )}
+                          {market.status && market.status !== 'active' && (
+                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded capitalize">
+                              {market.status}
                             </span>
                           )}
                         </div>
@@ -121,7 +119,7 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="font-medium text-gray-900">
-                      {formatCurrency(market.volume_24h, true)}
+                      {formatCurrency(market.volume24h, true)}
                     </div>
                   </td>
                   {showSpread && (
@@ -140,9 +138,9 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                   )}
                   <td className="px-4 py-3 text-right">
                     <div className="text-xs">
-                      <span className="text-green-600 font-medium">{formatPrice(market.best_bid)}</span>
+                      <span className="text-green-600 font-medium">{formatPrice(bestBid)}</span>
                       <span className="text-gray-400 mx-1">/</span>
-                      <span className="text-red-600 font-medium">{formatPrice(market.best_ask)}</span>
+                      <span className="text-red-600 font-medium">{formatPrice(bestAsk)}</span>
                     </div>
                   </td>
                 </tr>

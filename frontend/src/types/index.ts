@@ -1,89 +1,38 @@
-// Types matching backend
+// Types matching pmxt UnifiedMarket response
 
-export interface Market {
-  id: string;
-  condition_id: string;
-  question: string;
-  slug: string;
-  description: string;
-  active: boolean;
-  closed: boolean;
-  archived: boolean;
-  end_date: string;
-  image_url: string | null;
-  icon: string | null;
-  rewards_min_size: number;
-  rewards_max_spread: number;
-  spread: number;
-  floor: number;
-  cap: number;
-  min_incentive_size: number;
-  max_incentive_spread: number;
-  amm_type: string;
-  market_slug: string | null;
-  min_tick_size: number;
-  min_order_size: number;
-  volume_24h: number;
-  volume: number;
-  liquidity: number;
-  comment_count: number;
-  long_description: string;
-  category: string;
-  tokens: Token[];
-  seconds_delay: number;
-  cpmm: boolean;
-  neg_risk: boolean;
-  neg_risk_market_id: string | null;
-  neg_risk_request_id: string | null;
-  neg_risk_auction_id: string | null;
-  neg_risk_whitelist: boolean;
-  enable_order_book: boolean;
-  best_ask: number;
-  best_bid: number;
-  last_price: number;
-  yes_ask: number;
-  yes_bid: number;
-  no_ask: number;
-  no_bid: number;
-  is_50_50_outcome: boolean;
-  status: string;
-  non_cash_element: number;
-  native_order_book: boolean;
-  alpha_url: string;
-  citations: string[];
-  one_day_price_change: number;
-  one_day_volume: number;
-  one_week_volume: number;
-  one_month_volume: number;
-  one_year_volume: number;
-  lifetime_volume: number;
-  one_day_tvl: number;
-  one_week_tvl: number;
-  one_month_tvl: number;
-  one_year_tvl: number;
-  lifetime_tvl: number;
-  one_day_base_volume: number;
-  one_week_base_volume: number;
-  one_month_base_volume: number;
-  one_year_base_volume: number;
-  lifetime_base_volume: number;
-  one_day_total_trades: number;
-  one_week_total_trades: number;
-  one_month_total_trades: number;
-  one_year_total_trades: number;
-  lifetime_total_trades: number;
-  expiration_date: string;
-  expiration_value: string;
-  game_start_time: string | null;
-  game_end_time: string | null;
-  restricted_locations: string[];
+export interface MarketOutcome {
+  outcomeId: string;
+  marketId?: string;
+  label: string;
+  price: number;
+  priceChange24h?: number;
+  metadata?: Record<string, any>;
 }
 
-export interface Token {
-  token_id: string;
-  outcome: string;
-  price: number;
-  winner: boolean;
+export interface Market {
+  marketId: string;
+  eventId?: string;
+  title: string;
+  description: string;
+  slug?: string;
+  status?: string;
+  outcomes: MarketOutcome[];
+  resolutionDate?: string;
+  liquidity: number;
+  volume24h: number;
+  volume?: number;
+  openInterest?: number;
+  image?: string | null;
+  category?: string;
+  tags?: string[];
+  tickSize?: number;
+  url: string;
+  contractAddress?: string;
+  yes?: MarketOutcome;
+  no?: MarketOutcome;
+  up?: MarketOutcome;
+  down?: MarketOutcome;
+  sourceMetadata?: Record<string, any>;
 }
 
 export interface Order {
@@ -96,7 +45,7 @@ export interface OrderBook {
   asset_id: string;
   bids: Order[];
   asks: Order[];
-  hash: string;
+  hash?: string;
 }
 
 export interface SpreadAnalysis {
@@ -129,9 +78,12 @@ export interface ApiResponse<T> {
 }
 
 export type MarketFilter = {
+  query?: string;
   liquidity_min?: number;
   volume_24h_min?: number;
   category?: string;
+  status?: 'active' | 'closed' | 'all';
+  sort?: 'liquidity' | 'volume' | 'newest' | 'price_change';
   sort_by?: 'liquidity' | 'volume_24h' | 'price_change' | 'spread';
   sort_order?: 'asc' | 'desc';
   limit?: number;

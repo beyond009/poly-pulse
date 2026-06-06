@@ -13,9 +13,12 @@ export const marketsApi = {
   // Get all markets with filters
   getMarkets: async (filter?: MarketFilter): Promise<Market[]> => {
     const params = new URLSearchParams();
+    if (filter?.query) params.append('query', filter.query);
     if (filter?.liquidity_min) params.append('liquidity_min', filter.liquidity_min.toString());
     if (filter?.volume_24h_min) params.append('volume_24h_min', filter.volume_24h_min.toString());
     if (filter?.category) params.append('category', filter.category);
+    if (filter?.status) params.append('status', filter.status);
+    if (filter?.sort) params.append('sort', filter.sort);
     if (filter?.sort_by) params.append('sort_by', filter.sort_by);
     if (filter?.sort_order) params.append('sort_order', filter.sort_order);
     if (filter?.limit) params.append('limit', filter.limit.toString());

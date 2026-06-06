@@ -8,11 +8,11 @@ interface StatsOverviewProps {
 
 export function StatsOverview({ markets }: StatsOverviewProps) {
   const totalLiquidity = markets.reduce((sum, m) => sum + (m.liquidity ?? 0), 0);
-  const totalVolume24h = markets.reduce((sum, m) => sum + (m.volume_24h ?? 0), 0);
+  const totalVolume24h = markets.reduce((sum, m) => sum + (m.volume24h ?? 0), 0);
   const avgPriceChange = markets.length > 0
-    ? markets.reduce((sum, m) => sum + (m.one_day_price_change || 0), 0) / markets.length
+    ? markets.reduce((sum, m) => sum + (m.yes?.priceChange24h || m.outcomes[0]?.priceChange24h || 0), 0) / markets.length
     : 0;
-  const activeMarkets = markets.filter(m => m.active && !m.closed).length;
+  const activeMarkets = markets.filter(m => m.status === 'active').length;
 
   const stats = [
     {

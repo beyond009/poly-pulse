@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCategories } from '../hooks/useMarkets';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react';
 import type { MarketFilter, ViewTab } from '../types';
 
 interface FiltersProps {
@@ -30,13 +30,25 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
 
   const sortOptions = [
     { value: 'liquidity', label: '流动性' },
-    { value: 'volume_24h', label: '24h 成交' },
+    { value: 'volume', label: '24h 成交量' },
+    { value: 'newest', label: '最新' },
     { value: 'price_change', label: '价格变动' },
-    { value: 'spread', label: 'Spread' },
   ];
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      {/* Search bar - always visible */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          value={filter.query || ''}
+          onChange={(e) => onFilterChange({ ...filter, query: e.target.value || undefined })}
+          placeholder="搜索市场关键词（如 Trump、BTC、AI）"
+          className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+        />
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5 text-gray-500" />
@@ -129,8 +141,8 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
             </label>
             <div className="flex gap-4">
               <select
-                value={filter.sort_by || 'liquidity'}
-                onChange={(e) => onFilterChange({ ...filter, sort_by: e.target.value as any })}
+                value={filter.sort || filter.sort_by || 'liquidity'}
+                onChange={(e) => onFilterChange({ ...filter, sort: e.target.value as any, sort_by: undefined })}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
                 {sortOptions.map((opt) => (

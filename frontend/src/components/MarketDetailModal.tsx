@@ -20,11 +20,12 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
     const fetchDetails = async () => {
       setLoading(true);
       try {
-        const yesToken = market.tokens?.find(t => t.outcome === 'Yes');
-        if (yesToken) {
+        const yesOutcomeId = market.yes?.outcomeId;
+        const marketId = market.contractAddress || market.marketId;
+        if (yesOutcomeId) {
           const [ob, spread] = await Promise.all([
-            marketsApi.getOrderBook(market.condition_id, yesToken.token_id),
-            marketsApi.getSpreadAnalysis(market.condition_id, yesToken.token_id),
+            marketsApi.getOrderBook(marketId, yesOutcomeId),
+            marketsApi.getSpreadAnalysis(marketId, yesOutcomeId),
           ]);
           setOrderBook(ob);
           setSpreadAnalysis(spread);
@@ -41,9 +42,8 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
 
   if (!market) return null;
 
-  const yesToken = market.tokens?.find(t => t.outcome === 'Yes');
-  const currentPrice = yesToken?.price || market.last_price || 0;
-  const priceChange = market.one_day_price_change || 0;
+  const currentPrice = market.yes?.price || market.outcomes[0]?.price || 0;
+  const priceChange = market.yes?.priceChange24h || market.outcomes[0]?.priceChange24h || 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -51,22 +51,24 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-4">
-            {market.image_url && (
+            {market.image && (
               <img
-                src={market.image_url}
+                src={market.image}
                 alt=""
                 className="w-16 h-16 rounded-xl object-cover"
               />
             )}
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{market.question}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{market.title}</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="px-2 py-0.5 bg-gray-100 rounded text-sm text-gray-600">
-                  {market.category}
-                </span>
-                {market.neg_risk && (
-                  <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-sm">
-                    Neg Risk
+                {market.category && (
+                  <span className="px-2 py-0.5 bg-gray-100 rounded text-sm text-gray-600">
+                    {market.category}
+                  </span>
+                )}
+                {market.status && market.status !== 'active' && (
+                  <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-sm capitalize">
+                    {market.status}
                   </span>
                 )}
               </div>
@@ -74,7 +76,7 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href={`https://polymarket.com/event/${market.slug}`}
+              href={market.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
@@ -123,7 +125,7 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
                 <Clock className="w-4 h-4" />
                 24h 成交
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatCurrency(market.volume_24h, true)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrency(market.volume24h, true)}</div>
             </div>
           </div>
 
@@ -205,10 +207,29 @@ export function MarketDetailModal({ market, onClose }: MarketDetailModalProps) {
           )}
 
           {/* Description */}
-          {market.long_description && (
+          {market.description && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">市场描述</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{market.long_description}</p>
+              <p className="text-gray-600 text-sm leading-relaxed">{market.description}</p>
+            </div>
+          )}
+
+          {market.outcomes.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">结果选项</h3>
+              <div className="flex flex-wrap gap-2">
+                {market.outcomes.map((outcome) => (
+                  <div key={outcome.outcomeId} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border">
+                    <span className="font-medium text-gray-800">{outcome.label}</span>
+                    <span className="text-primary-600 font-semibold">{(outcome.price * 100).toFixed(1)}%</span>
+                    {outcome.priceChange24h !== undefined && outcome.priceChange24h !== 0 && (
+                      <span className={`text-xs ${outcome.priceChange24h > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {outcome.priceChange24h > 0 ? '+' : ''}{(outcome.priceChange24h * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

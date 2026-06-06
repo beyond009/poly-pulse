@@ -32,7 +32,7 @@ export function useMarkets({ tab, filter, refreshInterval = 30000 }: UseMarketsO
         default:
           data = await marketsApi.getMarkets({
             ...filter,
-            limit: filter?.limit || 100,
+            limit: filter?.limit || 20,
           });
       }
 
