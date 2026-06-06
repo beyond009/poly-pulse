@@ -1,12 +1,10 @@
 import axios from 'axios';
-import { execFile } from 'child_process';
+import { polymarketService } from '../lib/pmxt/polymarket/service';
 import { OrderBook, PriceChange, SpreadAnalysis } from '../types';
 import { UnifiedMarket, UnifiedMarketFilter } from '../types/polymarketUnified';
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const CLOB_API = 'https://clob.polymarket.com';
-const PMXT_API_URL = process.env.PMXT_API_URL || 'http://127.0.0.1:3847';
-const PMXT_ACCESS_TOKEN = process.env.PMXT_ACCESS_TOKEN || 'my-token';
 
 const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY ||
                  process.env.http_proxy || process.env.HTTP_PROXY;
@@ -22,6 +20,7 @@ if (proxyUrl) {
 }
 
 const apiClient = axios.create(axiosConfig);
+
 
 
 interface Cache<T> {
@@ -45,33 +44,8 @@ function setCache<T>(key: string, data: T): void {
 }
 
 async function fetchFromPmxt(params: Record<string, any>): Promise<UnifiedMarket[]> {
-  const qsObj: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) qsObj[k] = String(v);
-  }
-  const qs = new URLSearchParams(qsObj).toString();
-  const url = `${PMXT_API_URL}/api/polymarket/fetchMarkets${qs ? `?${qs}` : ''}`;
-
-  return new Promise((resolve, reject) => {
-    const args = ['-s', '--max-time', '60', url,
-      '-H', `x-pmxt-access-token: ${PMXT_ACCESS_TOKEN}`,
-      '-H', 'Accept: application/json',
-    ];
-    execFile('curl', args, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout) => {
-      if (error) { reject(error); return; }
-      try {
-        const data = JSON.parse(stdout);
-        if (data?.success && Array.isArray(data.data)) {
-          resolve(data.data as UnifiedMarket[]);
-        } else {
-          console.error('pmxt returned non-success:', data);
-          resolve([]);
-        }
-      } catch (e) {
-        reject(new Error('Invalid JSON from pmxt'));
-      }
-    });
-  });
+  const markets = await polymarketService.fetchMarkets(params);
+  return markets as unknown as UnifiedMarket[];
 }
 
 function buildPmxtParams(filter: UnifiedMarketFilter): Record<string, any> {

@@ -1,0 +1,160 @@
+import { UnifiedMarket, MarketOutcome, CandleInterval } from '../types';
+import { addBinaryOutcomes } from '../utils/market-utils';
+import { buildSourceMetadata } from '../utils/metadata';
+import { logger } from '../utils/logger';
+
+const POLYMARKET_PROMOTED_MARKET_KEYS = [
+    'id', 'question', 'description',
+    'outcomes', 'outcomePrices', 'clobTokenIds',
+    'endDate', 'end_date_iso', 'endDateIso',
+    'volume24hr', 'volume_24h', 'volume', 'liquidity', 'rewards',
+    'openInterest', 'open_interest',
+    'image', 'slug',
+    'orderPriceMinTickSize',
+    'conditionId',
+    'active', 'closed', 'archived',
+    'events',
+] as const;
+
+export const GAMMA_API_URL = process.env.POLYMARKET_GAMMA_URL || 'https://gamma-api.polymarket.com/events';
+export const GAMMA_SEARCH_URL = process.env.POLYMARKET_GAMMA_SEARCH_URL || 'https://gamma-api.polymarket.com/public-search';
+export const CLOB_API_URL = process.env.POLYMARKET_CLOB_URL || 'https://clob.polymarket.com';
+export const DATA_API_URL = process.env.POLYMARKET_DATA_URL || 'https://data-api.polymarket.com';
+
+export function mapMarketToUnified(event: any, market: any, options: { useQuestionAsCandidateFallback?: boolean } = {}): UnifiedMarket | null {
+    if (!market) return null;
+
+    const outcomes: MarketOutcome[] = [];
+    let outcomeLabels: string[] = [];
+    let outcomePrices: string[] = [];
+
+    try {
+        outcomeLabels = (typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : market.outcomes) || [];
+        outcomePrices = (typeof market.outcomePrices === 'string' ? JSON.parse(market.outcomePrices) : market.outcomePrices) || [];
+    } catch (e) {
+        logger.warn(`Error parsing outcomes for market ${market.id}`, { error: String(e) });
+    }
+
+    let clobTokenIds: string[] = [];
+    try {
+        clobTokenIds = (typeof market.clobTokenIds === 'string' ? JSON.parse(market.clobTokenIds) : market.clobTokenIds) || [];
+    } catch (e) {
+        logger.warn(`Error parsing clobTokenIds for market ${market.id}`, { error: String(e) });
+    }
+
+    let candidateName: string | null = null;
+    if (market.groupItemTitle) {
+        candidateName = market.groupItemTitle;
+    } else if (market.question && options.useQuestionAsCandidateFallback) {
+        candidateName = market.question;
+    }
+
+    if (outcomeLabels.length > 0) {
+        outcomeLabels.forEach((label: string, index: number) => {
+            const rawPrice = outcomePrices[index] || '0';
+            let outcomeLabel = label;
+            if (candidateName && label.toLowerCase() === 'yes') outcomeLabel = candidateName;
+            else if (candidateName && label.toLowerCase() === 'no') outcomeLabel = `Not ${candidateName}`;
+
+            let priceChange = 0;
+            if (index === 0 || label.toLowerCase() === 'yes' || (candidateName && label === candidateName)) {
+                priceChange = Number(market.oneDayPriceChange || 0);
+            }
+
+            outcomes.push({
+                outcomeId: clobTokenIds[index] || String(index),
+                marketId: market.id,
+                label: outcomeLabel,
+                price: parseFloat(rawPrice) || 0,
+                priceChange24h: priceChange,
+                metadata: { clobTokenId: clobTokenIds[index] },
+            });
+        });
+    }
+
+    let status: string | undefined;
+    if (market.archived === true) status = 'archived';
+    else if (market.closed === true) status = 'closed';
+    else if (market.active === true) status = 'active';
+
+    const um = {
+        id: market.id,
+        marketId: market.id,
+        eventId: event.id || event.slug,
+        title: market.question ? `${event.title} - ${market.question}` : event.title,
+        description: market.description || event.description,
+        slug: typeof market.slug === 'string' && market.slug.length > 0 ? market.slug : undefined,
+        outcomes,
+        resolutionDate: market.endDate ? new Date(market.endDate) : (market.endDateIso ? new Date(market.endDateIso) : new Date()),
+        volume24h: Number(market.volume24hr || market.volume_24h || 0),
+        volume: Number(market.volume || 0),
+        liquidity: Number(market.liquidity || market.rewards?.liquidity || 0),
+        openInterest: Number(market.openInterest || market.open_interest || 0),
+        url: `https://polymarket.com/event/${event.slug}`,
+        image: market.image || event.image || `https://polymarket.com/api/og?slug=${event.slug}`,
+        category: event.category || event.tags?.[0]?.label,
+        tags: event.tags?.map((t: any) => t.label) || [],
+        tickSize: market.orderPriceMinTickSize != null ? Number(market.orderPriceMinTickSize) : undefined,
+        status,
+        contractAddress: typeof market.conditionId === 'string' && market.conditionId.length > 0 ? market.conditionId : undefined,
+        sourceMetadata: buildSourceMetadata(market as unknown as Record<string, unknown>, POLYMARKET_PROMOTED_MARKET_KEYS),
+    } as UnifiedMarket;
+
+    addBinaryOutcomes(um);
+    return um;
+}
+
+export function mapIntervalToFidelity(interval: CandleInterval): number {
+    const mapping: Record<string, number> = { '1m': 1, '5m': 5, '15m': 15, '1h': 60, '6h': 360, '1d': 1440 };
+    return mapping[interval] || 60;
+}
+
+export async function paginateParallel(url: string, params: any, http: any, maxResults: number = 10000): Promise<any[]> {
+    const PAGE_SIZE = 100;
+    const initialLimit = Math.min(params.limit || PAGE_SIZE, PAGE_SIZE);
+    const firstPageResponse = await http.get(url, { params: { ...params, limit: initialLimit, offset: 0 } });
+    const firstPage = firstPageResponse.data || [];
+
+    if (firstPage.length < initialLimit || (params.limit && params.limit <= PAGE_SIZE)) {
+        return firstPage;
+    }
+
+    const MAX_OFFSET = 10000;
+    const targetLimit = Math.min(params.limit || maxResults, MAX_OFFSET + PAGE_SIZE);
+    const numPages = Math.ceil(targetLimit / PAGE_SIZE);
+    const offsets: number[] = [];
+    for (let i = 1; i < numPages; i++) {
+        const offset = i * PAGE_SIZE;
+        if (offset > MAX_OFFSET) break;
+        offsets.push(offset);
+    }
+
+    const remainingPages = await Promise.all(offsets.map(async (offset) => {
+        const res = await http.get(url, { params: { ...params, limit: PAGE_SIZE, offset } });
+        return res.data;
+    }));
+
+    return [firstPage, ...remainingPages].flat();
+}
+
+export async function paginateSearchParallel(url: string, params: any, maxResults: number = 10000, http: any): Promise<any[]> {
+    const firstPageResponse = await http.get(url, { params: { ...params, page: 1 } });
+    const data = firstPageResponse.data;
+    const firstPageEvents = data.events || [];
+    const pagination = data.pagination;
+
+    if (!pagination?.hasMore || firstPageEvents.length === 0) return firstPageEvents;
+
+    const limitPerType = params.limit_per_type || 20;
+    const totalResults = Math.min(pagination.totalResults || 0, maxResults);
+    const totalPages = Math.ceil(totalResults / limitPerType);
+    const pageNumbers = [];
+    for (let i = 2; i <= totalPages; i++) pageNumbers.push(i);
+
+    const remainingPages = await Promise.all(pageNumbers.map(async (pageNum) => {
+        const res = await http.get(url, { params: { ...params, page: pageNum } });
+        return res.data?.events;
+    }));
+
+    return [firstPageEvents, ...remainingPages].flat();
+}
