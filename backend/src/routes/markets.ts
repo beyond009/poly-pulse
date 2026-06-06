@@ -9,7 +9,7 @@ import {
   getOrderBook,
   analyzeSpread,
   getPriceChanges,
-} from '../services/polymarketService';
+} from '../services/polymarketUnifiedService';
 
 const router = Router();
 
@@ -20,8 +20,15 @@ router.get('/', async (req, res) => {
       liquidity_min,
       volume_24h_min,
       category,
+      query,
+      status,
+      sort,
       sort_by,
       sort_order,
+      search_in,
+      market_id,
+      event_id,
+      slug,
       limit,
       offset,
     } = req.query;
@@ -30,8 +37,15 @@ router.get('/', async (req, res) => {
       liquidity_min: liquidity_min ? parseFloat(liquidity_min as string) : undefined,
       volume_24h_min: volume_24h_min ? parseFloat(volume_24h_min as string) : undefined,
       category: category as string | undefined,
+      query: query as string | undefined,
+      status: status as 'active' | 'closed' | 'inactive' | 'archived' | 'all' | undefined,
+      sort: sort as 'liquidity' | 'volume' | 'newest' | 'price_change' | 'spread' | undefined,
       sort_by: sort_by as any,
       sort_order: sort_order as 'asc' | 'desc' | undefined,
+      search_in: search_in as 'title' | 'description' | 'both' | undefined,
+      market_id: market_id as string | undefined,
+      event_id: event_id as string | undefined,
+      slug: slug as string | undefined,
       limit: limit ? parseInt(limit as string) : 100,
       offset: offset ? parseInt(offset as string) : 0,
     };
