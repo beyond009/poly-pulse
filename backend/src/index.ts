@@ -1,9 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import './config/env';
 import marketRoutes from './routes/markets';
-
-dotenv.config();
+import socialRoutes from './routes/social';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +18,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/markets', marketRoutes);
+app.use('/api/social', socialRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -32,6 +32,8 @@ app.get('/', (req, res) => {
       highVolume: '/api/markets/high-volume',
       topMovers: '/api/markets/top-movers',
       priceChanges: '/api/markets/price-changes',
+      socialTweets: '/api/social/tweets?q=',
+      socialHeat: '/api/social/heat?q=',
     },
   });
 });

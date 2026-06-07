@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, Market, OrderBook, SpreadAnalysis, PriceChange, MarketFilter } from '../types';
+import type { ApiResponse, Market, OrderBook, SpreadAnalysis, PriceChange, MarketFilter, Tweet, SocialHeat } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3939';
 
@@ -74,6 +74,35 @@ export const marketsApi = {
   getSpreadAnalysis: async (marketId: string, tokenId: string): Promise<SpreadAnalysis | null> => {
     const response = await api.get<ApiResponse<SpreadAnalysis>>(`/markets/${marketId}/spread-analysis?token_id=${tokenId}`);
     return response.data.success ? response.data.data : null;
+  },
+};
+
+// Social (xAPI / X) API
+export const socialApi = {
+  // Check whether xAPI is configured on the backend
+  getStatus: async (): Promise<boolean> => {
+    try {
+      const res = await api.get<ApiResponse<{ configured: boolean }>>('/social/status');
+      return res.data.data?.configured ?? false;
+    } catch {
+      return false;
+    }
+  },
+
+  // Get related tweets for a query
+  getTweets: async (query: string, sort: 'Top' | 'Latest' | 'People' = 'Top'): Promise<Tweet[]> => {
+    const res = await api.get<ApiResponse<Tweet[]>>(
+      `/social/tweets?q=${encodeURIComponent(query)}&sort=${sort}`
+    );
+    return res.data.success ? res.data.data : [];
+  },
+
+  // Get social heat + sentiment for a query
+  getHeat: async (query: string): Promise<SocialHeat | null> => {
+    const res = await api.get<ApiResponse<SocialHeat>>(
+      `/social/heat?q=${encodeURIComponent(query)}`
+    );
+    return res.data.success ? res.data.data : null;
   },
 };
 

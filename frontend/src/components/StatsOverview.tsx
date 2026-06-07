@@ -46,10 +46,10 @@ export function StatsOverview({ markets }: StatsOverviewProps) {
   ];
 
   const colorClasses: Record<string, { bg: string; text: string; icon: string }> = {
-    blue: { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-600' },
-    green: { bg: 'bg-green-50', text: 'text-green-700', icon: 'text-green-600' },
-    red: { bg: 'bg-red-50', text: 'text-red-700', icon: 'text-red-600' },
-    purple: { bg: 'bg-purple-50', text: 'text-purple-700', icon: 'text-purple-600' },
+    blue: { bg: 'bg-sky-500/10', text: 'text-sky-400', icon: 'text-sky-400' },
+    green: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: 'text-emerald-400' },
+    red: { bg: 'bg-rose-500/10', text: 'text-rose-400', icon: 'text-rose-400' },
+    purple: { bg: 'bg-purple-500/10', text: 'text-purple-400', icon: 'text-purple-400' },
   };
 
   return (
@@ -58,12 +58,12 @@ export function StatsOverview({ markets }: StatsOverviewProps) {
         const colors = colorClasses[stat.color];
         const Icon = stat.icon;
         return (
-          <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-4">
+          <div key={stat.label} className="bg-slate-900 rounded-xl border border-slate-800 p-4 hover:border-slate-700 transition-colors">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
+                <p className="text-sm text-slate-400">{stat.label}</p>
                 <p className={`text-2xl font-bold mt-1 ${colors.text}`}>{stat.value}</p>
-                <p className="text-xs text-gray-400 mt-1">{stat.subtext}</p>
+                <p className="text-xs text-slate-500 mt-1">{stat.subtext}</p>
               </div>
               <div className={`p-2 rounded-lg ${colors.bg}`}>
                 <Icon className={`w-5 h-5 ${colors.icon}`} />

@@ -10,7 +10,7 @@ interface FiltersProps {
 }
 
 export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories } = useCategories();
   const [isOpen, setIsOpen] = useState(false);
 
   const liquidityOptions = [
@@ -36,27 +36,27 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 mb-6">
       {/* Search bar - always visible */}
       <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
         <input
           type="text"
           value={filter.query || ''}
           onChange={(e) => onFilterChange({ ...filter, query: e.target.value || undefined })}
           placeholder="搜索市场关键词（如 Trump、BTC、AI）"
-          className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+          className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
         />
       </div>
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5 text-gray-500" />
-          <h3 className="font-medium text-gray-900">筛选与排序</h3>
+          <SlidersHorizontal className="w-5 h-5 text-slate-400" />
+          <h3 className="font-medium text-slate-100">筛选与排序</h3>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+          className="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300"
         >
           {isOpen ? '收起' : '展开'}
           <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -64,16 +64,16 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
       </div>
 
       {isOpen && (
-        <div className="space-y-4 border-t border-gray-100 pt-4">
+        <div className="space-y-4 border-t border-slate-800 pt-4">
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               分类
             </label>
             <select
               value={filter.category || ''}
               onChange={(e) => onFilterChange({ ...filter, category: e.target.value || undefined })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">全部分类</option>
               {categories.map((cat) => (
@@ -85,7 +85,7 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
           {/* Liquidity Filter */}
           {activeTab !== 'high-liquidity' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 最小流动性
               </label>
               <div className="flex flex-wrap gap-2">
@@ -93,13 +93,10 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
                   <button
                     key={opt.value}
                     onClick={() => onFilterChange({ ...filter, liquidity_min: opt.value || undefined })}
-                    className={`
-                      px-3 py-1.5 text-sm rounded-lg border transition-colors
-                      ${filter.liquidity_min === opt.value || (opt.value === 0 && !filter.liquidity_min)
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-500'
-                      }
-                    `}
+                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.liquidity_min === opt.value || (opt.value === 0 && !filter.liquidity_min)
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -111,7 +108,7 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
           {/* Volume Filter */}
           {activeTab !== 'high-volume' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 最小 24h 成交
               </label>
               <div className="flex flex-wrap gap-2">
@@ -119,13 +116,10 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
                   <button
                     key={opt.value}
                     onClick={() => onFilterChange({ ...filter, volume_24h_min: opt.value || undefined })}
-                    className={`
-                      px-3 py-1.5 text-sm rounded-lg border transition-colors
-                      ${filter.volume_24h_min === opt.value || (opt.value === 0 && !filter.volume_24h_min)
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-primary-500'
-                      }
-                    `}
+                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.volume_24h_min === opt.value || (opt.value === 0 && !filter.volume_24h_min)
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -136,14 +130,14 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
 
           {/* Sort Options */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               排序方式
             </label>
             <div className="flex gap-4">
               <select
                 value={filter.sort || filter.sort_by || 'liquidity'}
                 onChange={(e) => onFilterChange({ ...filter, sort: e.target.value as any, sort_by: undefined })}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 {sortOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -152,7 +146,7 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
               <select
                 value={filter.sort_order || 'desc'}
                 onChange={(e) => onFilterChange({ ...filter, sort_order: e.target.value as 'asc' | 'desc' })}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="desc">降序</option>
                 <option value="asc">升序</option>

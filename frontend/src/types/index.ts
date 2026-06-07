@@ -77,6 +77,51 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+// xAPI / X (Twitter) types
+export interface Tweet {
+  tweet_id: string;
+  user_id?: string;
+  text: string;
+  media_type?: string;
+  medias?: string[];
+  urls?: string[];
+  is_retweet?: boolean;
+  is_quote?: boolean;
+  is_reply?: boolean;
+  favorite_count: number;
+  quote_count: number;
+  reply_count: number;
+  retweet_count: number;
+  view_count: number;
+  created_at?: string;
+  user?: {
+    id_str?: string;
+    name?: string;
+    screen_name?: string;
+    location?: string;
+    description?: string;
+    profile_image_url?: string;
+    followers_count?: number;
+    verified?: boolean;
+  };
+}
+
+export type Sentiment = 'bullish' | 'bearish' | 'neutral';
+
+export interface SocialHeat {
+  query: string;
+  tweet_count: number;
+  total_engagement: number;
+  total_views: number;
+  total_likes: number;
+  total_retweets: number;
+  total_replies: number;
+  heat_score: number;
+  sentiment: Sentiment;
+  sentiment_score: number;
+  top_tweets: Tweet[];
+}
+
 export type MarketFilter = {
   query?: string;
   liquidity_min?: number;
@@ -90,4 +135,4 @@ export type MarketFilter = {
   offset?: number;
 };
 
-export type ViewTab = 'all' | 'high-liquidity' | 'high-volume' | 'movers' | 'spread';
+export type ViewTab = 'all' | 'high-liquidity' | 'high-volume' | 'movers' | 'spread' | 'social-heat';

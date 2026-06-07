@@ -3,8 +3,6 @@ import {
   formatCurrency,
   formatPercentage,
   formatPrice,
-  formatNumber,
-  getPriceChangeColor,
   getPriceChangeBg,
 } from '../utils/formatters';
 import { TrendingUp, TrendingDown, Droplets, Activity, ArrowRightLeft } from 'lucide-react';
@@ -16,37 +14,34 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market, onClick, showSpread = false }: MarketCardProps) {
-  // Try multiple sources for price
-  const yesToken = market.tokens?.find(t => t.outcome === 'Yes' || t.outcome === 'Yes, Yes');
-  const currentPrice = yesToken?.price ?? market.last_price ?? market.yes_bid ?? market.yes_ask ?? 0;
-  const priceChange = market.one_day_price_change ?? 0;
-  const spread = market.spread ?? (market.yes_ask && market.yes_bid ? market.yes_ask - market.yes_bid : 0);
+  const currentPrice = market.yes?.price ?? market.outcomes[0]?.price ?? 0;
+  const priceChange = market.yes?.priceChange24h ?? market.outcomes[0]?.priceChange24h ?? 0;
+  const bestBid = (market.sourceMetadata?.bestBid as number) ?? 0;
+  const bestAsk = (market.sourceMetadata?.bestAsk as number) ?? 0;
+  const spread = (market.sourceMetadata?.spread as number) ?? (bestAsk && bestBid ? bestAsk - bestBid : 0);
 
   return (
     <div
       onClick={() => onClick?.(market)}
-      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      className="bg-slate-900 rounded-xl border border-slate-800 p-4 hover:border-slate-700 transition-colors cursor-pointer"
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
-        {market.image_url && (
+        {market.image && (
           <img
-            src={market.image_url}
-            alt={market.question}
+            src={market.image}
+            alt={market.title}
             className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
           />
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
-            {market.question}
+          <h3 className="font-semibold text-slate-100 text-sm leading-tight line-clamp-2">
+            {market.title}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
-              {market.category}
-            </span>
-            {market.neg_risk && (
-              <span className="text-xs px-2 py-0.5 bg-yellow-100 rounded-full text-yellow-700">
-                Neg Risk
+            {market.category && (
+              <span className="text-xs px-2 py-0.5 bg-slate-800 rounded-full text-slate-400">
+                {market.category}
               </span>
             )}
           </div>
@@ -56,10 +51,10 @@ export function MarketCard({ market, onClick, showSpread = false }: MarketCardPr
       {/* Price & Change */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-2xl font-bold text-slate-100">
             {formatPrice(currentPrice)}
           </div>
-          <div className="text-xs text-gray-500">当前价格</div>
+          <div className="text-xs text-slate-500">当前价格</div>
         </div>
         <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${getPriceChangeBg(priceChange)}`}>
           {priceChange > 0 ? (
@@ -76,53 +71,50 @@ export function MarketCard({ market, onClick, showSpread = false }: MarketCardPr
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="flex items-center gap-2">
-          <Droplets className="w-4 h-4 text-blue-500" />
+          <Droplets className="w-4 h-4 text-sky-400" />
           <div>
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-slate-200">
               {formatCurrency(market.liquidity, true)}
             </div>
-            <div className="text-xs text-gray-500">流动性</div>
+            <div className="text-xs text-slate-500">流动性</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-green-500" />
+          <Activity className="w-4 h-4 text-emerald-400" />
           <div>
-            <div className="font-medium text-gray-900">
-              {formatCurrency(market.volume_24h, true)}
+            <div className="font-medium text-slate-200">
+              {formatCurrency(market.volume24h, true)}
             </div>
-            <div className="text-xs text-gray-500">24h 成交</div>
+            <div className="text-xs text-slate-500">24h 成交</div>
           </div>
         </div>
       </div>
 
       {/* Spread Info (for spread view) */}
       {showSpread && spread > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-slate-800">
           <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-1 text-gray-600">
+            <div className="flex items-center gap-1 text-slate-400">
               <ArrowRightLeft className="w-4 h-4" />
               <span>Spread</span>
             </div>
             <div className="font-medium">
-              <span className={spread > 0.02 ? 'text-warning' : spread > 0.05 ? 'text-danger' : 'text-success'}>
+              <span className={spread > 0.05 ? 'text-rose-400' : spread > 0.02 ? 'text-amber-400' : 'text-emerald-400'}>
                 {formatPrice(spread)} ({formatPercentage(currentPrice > 0 ? spread / currentPrice : 0)})
               </span>
             </div>
-          </div>
-          <div className="mt-1 text-xs text-gray-500">
-            交易成本: {formatPercentage(currentPrice > 0 ? spread / currentPrice : 0)}
           </div>
         </div>
       )}
 
       {/* Trading Info */}
-      {(market.best_bid > 0 || market.best_ask > 0) && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-          <span className="text-gray-500">
-            Bid: <span className="font-medium text-green-600">{formatPrice(market.best_bid)}</span>
+      {(bestBid > 0 || bestAsk > 0) && (
+        <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+          <span className="text-slate-500">
+            Bid: <span className="font-medium text-emerald-400">{formatPrice(bestBid)}</span>
           </span>
-          <span className="text-gray-500">
-            Ask: <span className="font-medium text-red-600">{formatPrice(market.best_ask)}</span>
+          <span className="text-slate-500">
+            Ask: <span className="font-medium text-rose-400">{formatPrice(bestAsk)}</span>
           </span>
         </div>
       )}

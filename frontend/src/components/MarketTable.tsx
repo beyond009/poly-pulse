@@ -16,44 +16,44 @@ interface MarketTableProps {
 export function MarketTable({ markets, onRowClick, showSpread = false }: MarketTableProps) {
   if (markets.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
+      <div className="bg-slate-900 rounded-xl border border-slate-800 p-8 text-center text-slate-500">
         暂无数据
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-slate-800/50 border-b border-slate-800">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 市场
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 价格
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 24h 涨跌
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 流动性
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 24h 成交
               </th>
               {showSpread && (
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Spread (成本)
                 </th>
               )}
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Bid / Ask
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-slate-800">
             {markets.map((market) => {
               const currentPrice = market.yes?.price ?? market.outcomes[0]?.price ?? 0;
               const priceChange = market.yes?.priceChange24h ?? market.outcomes[0]?.priceChange24h ?? 0;
@@ -65,7 +65,7 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                 <tr
                   key={market.marketId}
                   onClick={() => onRowClick?.(market)}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="hover:bg-slate-800/50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -77,17 +77,17 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                         />
                       )}
                       <div className="min-w-0">
-                        <div className="font-medium text-gray-900 text-sm truncate max-w-xs">
+                        <div className="font-medium text-slate-100 text-sm truncate max-w-xs">
                           {market.title}
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
                           {market.category && (
-                            <span className="px-1.5 py-0.5 bg-gray-100 rounded">
+                            <span className="px-1.5 py-0.5 bg-slate-800 rounded">
                               {market.category}
                             </span>
                           )}
                           {market.status && market.status !== 'active' && (
-                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded capitalize">
+                            <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded capitalize">
                               {market.status}
                             </span>
                           )}
@@ -96,7 +96,7 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold text-slate-100">
                       {formatPrice(currentPrice)}
                     </div>
                   </td>
@@ -113,24 +113,24 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-slate-200">
                       {formatCurrency(market.liquidity, true)}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-slate-200">
                       {formatCurrency(market.volume24h, true)}
                     </div>
                   </td>
                   {showSpread && (
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <ArrowRightLeft className="w-4 h-4 text-gray-400" />
-                        <span className={`font-medium ${spread > 0.05 ? 'text-danger' : spread > 0.02 ? 'text-warning' : 'text-success'
+                        <ArrowRightLeft className="w-4 h-4 text-slate-500" />
+                        <span className={`font-medium ${spread > 0.05 ? 'text-rose-400' : spread > 0.02 ? 'text-amber-400' : 'text-emerald-400'
                           }`}>
                           {formatPrice(spread)}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-500">
                           ({formatPercentage(currentPrice > 0 ? spread / currentPrice : 0)})
                         </span>
                       </div>
@@ -138,9 +138,9 @@ export function MarketTable({ markets, onRowClick, showSpread = false }: MarketT
                   )}
                   <td className="px-4 py-3 text-right">
                     <div className="text-xs">
-                      <span className="text-green-600 font-medium">{formatPrice(bestBid)}</span>
-                      <span className="text-gray-400 mx-1">/</span>
-                      <span className="text-red-600 font-medium">{formatPrice(bestAsk)}</span>
+                      <span className="text-emerald-400 font-medium">{formatPrice(bestBid)}</span>
+                      <span className="text-slate-600 mx-1">/</span>
+                      <span className="text-rose-400 font-medium">{formatPrice(bestAsk)}</span>
                     </div>
                   </td>
                 </tr>

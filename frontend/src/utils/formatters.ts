@@ -16,6 +16,14 @@ export function formatCurrency(value: number | undefined | null, compact: boolea
   }).format(value);
 }
 
+export function formatCompact(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) return '0';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
+}
+
 export function formatNumber(value: number | undefined | null, decimals: number = 2): string {
   if (value === undefined || value === null) return '0';
   return new Intl.NumberFormat('en-US', {
