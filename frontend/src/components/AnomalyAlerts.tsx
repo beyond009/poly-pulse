@@ -138,7 +138,7 @@ function buildMockAlerts(markets: Market[]): AnomalyAlert[] {
       severity: 'high',
       title: '成交量突然放大',
       signal: `${getMarketTitle(volumeMarket, 1)} 出现主动成交堆积`,
-      metric: `${formatCompact((volumeMarket?.volume24h ?? 186000) / 1000)}K`,
+      metric: formatCurrency(volumeMarket?.volume24h ?? 186000, true),
       baseline: `24h 成交 ${formatCurrency(volumeMarket?.volume24h ?? 186000, true)} · 高于样本均值`,
       detectedAt: '12分钟前',
       confidence: 0.88,

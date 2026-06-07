@@ -17,24 +17,10 @@ export function useMarkets({ tab, filter, refreshInterval = 30000 }: UseMarketsO
   const fetchMarkets = useCallback(async () => {
     try {
       setLoading(true);
-      let data: Market[] = [];
-
-      switch (tab) {
-        case 'high-liquidity':
-          data = await marketsApi.getHighLiquidity(filter?.liquidity_min || 100000);
-          break;
-        case 'high-volume':
-          data = await marketsApi.getHighVolume(filter?.volume_24h_min || 50000);
-          break;
-        case 'movers':
-          data = await marketsApi.getTopMovers(20, 'both');
-          break;
-        default:
-          data = await marketsApi.getMarkets({
-            ...filter,
-            limit: filter?.limit || 20,
-          });
-      }
+      const data = await marketsApi.getMarkets({
+        ...filter,
+        limit: filter?.limit || (tab === 'alerts' ? 30 : 40),
+      });
 
       setMarkets(data);
       setLastUpdated(new Date());

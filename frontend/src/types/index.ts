@@ -135,4 +135,4 @@ export type MarketFilter = {
   offset?: number;
 };
 
-export type ViewTab = 'all' | 'high-liquidity' | 'high-volume' | 'movers' | 'spread' | 'social-heat';
+export type ViewTab = 'dashboard' | 'alerts';

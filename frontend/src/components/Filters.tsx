@@ -6,10 +6,10 @@ import type { MarketFilter, ViewTab } from '../types';
 interface FiltersProps {
   filter: MarketFilter;
   onFilterChange: (filter: MarketFilter) => void;
-  activeTab: ViewTab;
+  activeTab?: ViewTab;
 }
 
-export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
+export function Filters({ filter, onFilterChange }: FiltersProps) {
   const { categories } = useCategories();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -83,50 +83,46 @@ export function Filters({ filter, onFilterChange, activeTab }: FiltersProps) {
           </div>
 
           {/* Liquidity Filter */}
-          {activeTab !== 'high-liquidity' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                最小流动性
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {liquidityOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onFilterChange({ ...filter, liquidity_min: opt.value || undefined })}
-                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.liquidity_min === opt.value || (opt.value === 0 && !filter.liquidity_min)
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              最小流动性
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {liquidityOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onFilterChange({ ...filter, liquidity_min: opt.value || undefined })}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.liquidity_min === opt.value || (opt.value === 0 && !filter.liquidity_min)
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
+                    }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Volume Filter */}
-          {activeTab !== 'high-volume' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                最小 24h 成交
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {volumeOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onFilterChange({ ...filter, volume_24h_min: opt.value || undefined })}
-                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.volume_24h_min === opt.value || (opt.value === 0 && !filter.volume_24h_min)
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              最小 24h 成交
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {volumeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onFilterChange({ ...filter, volume_24h_min: opt.value || undefined })}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${filter.volume_24h_min === opt.value || (opt.value === 0 && !filter.volume_24h_min)
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-indigo-500'
+                    }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Sort Options */}
           <div>
