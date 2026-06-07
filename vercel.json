@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "experimentalServices": {
+    "web": {
+      "entrypoint": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "api": {
+      "entrypoint": "backend/src/index.ts",
+      "routePrefix": "/api",
+      "framework": "express",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}

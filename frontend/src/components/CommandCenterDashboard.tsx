@@ -23,6 +23,7 @@ import { Filters } from './Filters';
 import { MarketTable } from './MarketTable';
 import { SocialHeatBoard } from './SocialHeatBoard';
 import { AnomalyAlertPanel } from './AnomalyAlerts';
+import { MarketTweetBrowser } from './MarketTweetBrowser';
 
 interface CommandCenterDashboardProps {
   markets: Market[];
@@ -208,6 +209,8 @@ export function CommandCenterDashboard({
 
         <AnomalyAlertPanel markets={markets} onMarketClick={onMarketClick} />
       </div>
+
+      <MarketTweetBrowser markets={markets} onMarketClick={onMarketClick} />
 
       <section>
         <Filters filter={filter} onFilterChange={onFilterChange} activeTab={'dashboard' as ViewTab} />
