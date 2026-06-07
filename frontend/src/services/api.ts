@@ -1,10 +1,18 @@
 import axios from 'axios';
 import type { ApiResponse, Market, OrderBook, SpreadAnalysis, PriceChange, MarketFilter, Tweet, SocialHeat } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3939' : '');
+function getApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+  if (configured) {
+    return configured.endsWith('/api') ? configured : `${configured}/api`;
+  }
+  return import.meta.env.DEV ? 'http://localhost:3939/api' : '/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: API_BASE_URL,
   timeout: 30000,
 });
 

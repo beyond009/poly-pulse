@@ -56,7 +56,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Polymarket Dashboard API running on port ${PORT}`);
-  console.log(`📊 API URL: http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Polymarket Dashboard API running on port ${PORT}`);
+    console.log(`📊 API URL: http://localhost:${PORT}`);
+  });
+}
+
+export default app;

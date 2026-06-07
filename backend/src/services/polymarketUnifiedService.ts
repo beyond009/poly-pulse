@@ -1,26 +1,38 @@
 import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import { polymarketService } from '../lib/pmxt/polymarket/service';
 import { OrderBook, PriceChange, SpreadAnalysis } from '../types';
 import { UnifiedMarket, UnifiedMarketFilter } from '../types/polymarketUnified';
-const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const CLOB_API = 'https://clob.polymarket.com';
 
 const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY ||
                  process.env.http_proxy || process.env.HTTP_PROXY;
 
-const axiosConfig: any = {
+const baseAxiosConfig: any = {
   timeout: 15000,
   headers: { 'Accept': 'application/json' },
 };
 
-if (proxyUrl) {
-  axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
-  console.log(`Using proxy: ${proxyUrl}`);
+const importEsm = new Function('specifier', 'return import(specifier)') as (
+  specifier: string
+) => Promise<any>;
+let apiClientPromise: Promise<AxiosInstance> | null = null;
+
+async function getApiClient(): Promise<AxiosInstance> {
+  if (!apiClientPromise) {
+    apiClientPromise = (async () => {
+      const axiosConfig = { ...baseAxiosConfig };
+      if (proxyUrl) {
+        const { HttpsProxyAgent } = await importEsm('https-proxy-agent');
+        axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
+        console.log(`Using proxy: ${proxyUrl}`);
+      }
+      return axios.create(axiosConfig);
+    })();
+  }
+  return apiClientPromise;
 }
-
-const apiClient = axios.create(axiosConfig);
-
 
 
 interface Cache<T> {
@@ -95,6 +107,7 @@ export async function getOrderBook(tokenId: string, marketId?: string): Promise<
   if (cached) return cached;
 
   try {
+    const apiClient = await getApiClient();
     const response = await apiClient.get(`${CLOB_API}/book`, {
       params: { token_id: tokenId },
     });

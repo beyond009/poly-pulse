@@ -1,5 +1,5 @@
 import axios from 'axios';
-const { HttpsProxyAgent } = require('https-proxy-agent');
+import type { AxiosInstance } from 'axios';
 
 function getXapiBase(): string {
   return process.env.XAPI_ACTION_HOST
@@ -17,14 +17,29 @@ const proxyUrl =
   process.env.http_proxy ||
   process.env.HTTP_PROXY;
 
-const axiosConfig: any = {
+const baseAxiosConfig: any = {
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 };
-if (proxyUrl) {
-  axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
+
+const importEsm = new Function('specifier', 'return import(specifier)') as (
+  specifier: string
+) => Promise<any>;
+let clientPromise: Promise<AxiosInstance> | null = null;
+
+async function getClient(): Promise<AxiosInstance> {
+  if (!clientPromise) {
+    clientPromise = (async () => {
+      const axiosConfig = { ...baseAxiosConfig };
+      if (proxyUrl) {
+        const { HttpsProxyAgent } = await importEsm('https-proxy-agent');
+        axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
+      }
+      return axios.create(axiosConfig);
+    })();
+  }
+  return clientPromise;
 }
-const client = axios.create(axiosConfig);
 
 // ---- Types ----
 export interface Tweet {
@@ -95,6 +110,7 @@ async function executeAction<T = any>(actionId: string, input: Record<string, an
   if (!xapiKey) {
     throw new Error('XAPI_KEY not configured. Set it in backend/.env');
   }
+  const client = await getClient();
   const res = await client.post(
     `${getXapiBase()}/v1/actions/execute`,
     { action_id: actionId, input },
