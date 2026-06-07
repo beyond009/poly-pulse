@@ -133,7 +133,9 @@ function asNumber(value: any): number {
 function screenNameFromUrl(url?: string): string | undefined {
   if (!url) return undefined;
   const match = url.match(/(?:x|twitter)\.com\/([^/?#]+)/i);
-  return match?.[1];
+  const handle = match?.[1];
+  if (!handle || ['i', 'intent', 'share', 'search'].includes(handle)) return undefined;
+  return handle;
 }
 
 function normalizeMedia(raw: any): string[] {
@@ -166,8 +168,33 @@ function normalizeUrls(raw: any): string[] {
     .filter(Boolean);
 }
 
-function normalizeUser(raw: any): Tweet['user'] | undefined {
+function buildUsersById(raw: any): Map<string, any> {
+  const userSources = [
+    raw?.includes?.users,
+    raw?.data?.includes?.users,
+    raw?.output?.includes?.users,
+    raw?.output?.data?.includes?.users,
+    raw?.users,
+    raw?.data?.users,
+    raw?.output?.users,
+    raw?.output?.data?.users,
+  ].filter(Array.isArray);
+  const usersById = new Map<string, any>();
+  for (const users of userSources) {
+    for (const user of users) {
+      const id = firstValue(user?.id_str, user?.id, user?.rest_id);
+      if (id) usersById.set(String(id), user);
+    }
+  }
+  return usersById;
+}
+
+function normalizeUser(raw: any, usersById?: Map<string, any>): Tweet['user'] | undefined {
+  const linkedUser = usersById?.get(
+    String(firstValue(raw?.author_id, raw?.authorId, raw?.user_id, raw?.userId) ?? '')
+  );
   const userRoots = [
+    linkedUser,
     raw?.user,
     raw?.tweet?.user,
     raw?.author,
@@ -209,23 +236,35 @@ function normalizeUser(raw: any): Tweet['user'] | undefined {
     firstValue(...userRoots.map((root: any) => screenNameFromUrl(root?.url)));
 
   const screenName = firstValue(
-    fromUsers('screen_name', 'screenName', 'username', 'userName', 'handle'),
+    fromUsers('screen_name', 'screenName', 'screenname', 'username', 'userName', 'user_name', 'handle'),
     raw?.screen_name,
     raw?.screenName,
+    raw?.screenname,
     raw?.username,
+    raw?.userName,
+    raw?.user_name,
     raw?.author_screen_name,
     raw?.authorScreenName,
     raw?.author_username,
+    raw?.authorUsername,
+    raw?.author_user_name,
     fromLegacies('screen_name'),
     fromRootUrls(),
     screenNameFromUrl(raw?.url),
     screenNameFromUrl(raw?.twitterUrl),
-    screenNameFromUrl(raw?.author_url)
+    screenNameFromUrl(raw?.tweet_url),
+    screenNameFromUrl(raw?.tweetUrl),
+    screenNameFromUrl(raw?.permalink),
+    screenNameFromUrl(raw?.permanentUrl),
+    screenNameFromUrl(raw?.author_url),
+    screenNameFromUrl(raw?.authorUrl)
   );
   const name = firstValue(
-    fromUsers('name', 'display_name', 'displayName', 'full_name', 'fullName'),
+    fromUsers('name', 'display_name', 'displayName', 'displayname', 'full_name', 'fullName', 'nickname'),
     raw?.author_name,
     raw?.authorName,
+    raw?.author_display_name,
+    raw?.authorDisplayName,
     fromLegacies('name'),
     screenName
   );
@@ -236,22 +275,33 @@ function normalizeUser(raw: any): Tweet['user'] | undefined {
       'profileImageUrl',
       'profilePicture',
       'profile_picture',
+      'profileImage',
+      'profile_image',
       'avatar',
       'avatar_url',
+      'avatarUrl',
       'image',
-      'image_url'
+      'image_url',
+      'imageUrl',
+      'photo',
+      'photoUrl'
     ),
     raw?.author_profile_image_url,
     raw?.authorProfileImageUrl,
     raw?.author_profile_picture,
+    raw?.authorProfilePicture,
+    raw?.author_avatar,
+    raw?.authorAvatar,
     fromLegacies('profile_image_url_https', 'profile_image_url')
   );
   const followers = firstValue(
-    fromUsers('followers_count', 'followers', 'followersCount', 'follower_count'),
+    fromUsers('followers_count', 'followers', 'followersCount', 'follower_count', 'followerCount'),
     raw?.author_followers,
     raw?.authorFollowers,
+    raw?.author_followers_count,
+    raw?.authorFollowersCount,
     fromLegacies('followers_count'),
-    fromMetrics('followers_count', 'followersCount')
+    fromMetrics('followers_count', 'followersCount', 'followers')
   );
 
   if (users.length === 0 && !screenName && !name && !profileImage && followers === undefined) {
@@ -259,15 +309,26 @@ function normalizeUser(raw: any): Tweet['user'] | undefined {
   }
 
   return {
-    id_str: firstValue(fromUsers('id_str', 'id', 'rest_id'), fromLegacies('id_str'), raw?.user_id, raw?.author_id),
+    id_str: firstValue(fromUsers('id_str', 'id', 'rest_id'), fromLegacies('id_str'), raw?.user_id, raw?.userId, raw?.author_id, raw?.authorId),
     name,
     screen_name: screenName,
     location: firstValue(fromUsers('location'), fromLegacies('location')),
     description: firstValue(fromUsers('description'), fromLegacies('description')),
     profile_image_url: profileImage,
     followers_count: followers !== undefined ? asNumber(followers) : undefined,
-    verified: Boolean(firstValue(fromUsers('verified', 'is_blue_verified', 'isBlueVerified', 'verifiedType'), fromLegacies('verified'))),
+    verified: Boolean(firstValue(fromUsers('verified', 'is_verified', 'isVerified', 'is_blue_verified', 'isBlueVerified', 'verifiedType'), fromLegacies('verified'))),
   };
+}
+
+function logTweetShape(raw: any, tweets: any[]): void {
+  if (process.env.XAPI_DEBUG !== '1' || tweets.length === 0) return;
+  const first = tweets[0];
+  const summarize = (obj: any) => (obj && typeof obj === 'object' ? Object.keys(obj).slice(0, 40) : []);
+  console.log('[xapi debug] response keys:', summarize(raw));
+  console.log('[xapi debug] tweet keys:', summarize(first));
+  console.log('[xapi debug] user keys:', summarize(first?.user));
+  console.log('[xapi debug] author keys:', summarize(first?.author));
+  console.log('[xapi debug] includes users:', summarize(raw?.includes?.users?.[0] || raw?.data?.includes?.users?.[0] || raw?.output?.data?.includes?.users?.[0]));
 }
 
 function normalizeTweets(raw: any): Tweet[] {
@@ -280,6 +341,8 @@ function normalizeTweets(raw: any): Tweet[] {
     raw?.data?.data ||
     [];
   if (!Array.isArray(tweets)) return [];
+  logTweetShape(raw, tweets);
+  const usersById = buildUsersById(raw);
   return tweets.map((t: any) => {
     const legacy = t?.legacy || t?.tweet?.legacy;
     const metrics = t?.public_metrics || t?.publicMetrics || legacy?.public_metrics;
@@ -299,7 +362,7 @@ function normalizeTweets(raw: any): Tweet[] {
       retweet_count: asNumber(firstValue(t.retweet_count, t.retweetCount, t.retweets, legacy?.retweet_count, metrics?.retweet_count, metrics?.retweetCount)),
       view_count: asNumber(firstValue(t.view_count, t.viewCount, t.views, t.view_count_info, metrics?.view_count, metrics?.viewCount)),
       created_at: firstValue(t.created_at, t.createdAt, t.creation_date, t.created_at_iso, legacy?.created_at),
-      user: normalizeUser(t),
+      user: normalizeUser(t, usersById),
     };
   });
 }

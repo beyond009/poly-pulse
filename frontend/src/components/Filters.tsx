@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCategories } from '../hooks/useMarkets';
-import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown, Search, X } from 'lucide-react';
 import type { MarketFilter, ViewTab } from '../types';
 
 interface FiltersProps {
@@ -12,6 +12,26 @@ interface FiltersProps {
 export function Filters({ filter, onFilterChange }: FiltersProps) {
   const { categories } = useCategories();
   const [isOpen, setIsOpen] = useState(false);
+
+  const preferredCategories = [
+    'Politics',
+    'Sports',
+    'Crypto',
+    'Esports',
+    'Iran',
+    'Finance',
+    'Geopolitics',
+    'Tech',
+    'Culture',
+    'Economy',
+    'Weather',
+    'Mentions',
+    'Elections',
+  ];
+  const categoryRail = [
+    ...preferredCategories,
+    ...categories.filter((cat) => !preferredCategories.some((preferred) => preferred.toLowerCase() === cat.toLowerCase())),
+  ];
 
   const liquidityOptions = [
     { value: 0, label: '全部' },
@@ -36,7 +56,39 @@ export function Filters({ filter, onFilterChange }: FiltersProps) {
   ];
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 mb-6">
+    <div className="mb-6 space-y-3">
+      <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
+        <div className="flex items-center gap-1 overflow-x-auto px-2">
+          <button
+            onClick={() => onFilterChange({ ...filter, category: undefined })}
+            className={`flex-shrink-0 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              !filter.category
+                ? 'border-cyan-400 text-cyan-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            All
+          </button>
+          {categoryRail.map((category) => {
+            const active = filter.category?.toLowerCase() === category.toLowerCase();
+            return (
+              <button
+                key={category}
+                onClick={() => onFilterChange({ ...filter, category })}
+                className={`flex-shrink-0 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  active
+                    ? 'border-cyan-400 text-cyan-300'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
       {/* Search bar - always visible */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -48,6 +100,19 @@ export function Filters({ filter, onFilterChange }: FiltersProps) {
           className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
         />
       </div>
+
+      {filter.category && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm">
+          <span className="text-cyan-200">当前分类：{filter.category}</span>
+          <button
+            onClick={() => onFilterChange({ ...filter, category: undefined })}
+            className="rounded-md p-1 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-100"
+            title="清除分类"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -151,6 +216,7 @@ export function Filters({ filter, onFilterChange }: FiltersProps) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

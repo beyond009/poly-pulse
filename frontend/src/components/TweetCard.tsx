@@ -29,6 +29,8 @@ function getTweetUrl(tweet: Tweet): string {
 export function TweetCard({ tweet, contextLabel, compact = false }: TweetCardProps) {
   const created = tweet.created_at ? new Date(tweet.created_at) : null;
   const media = Array.isArray(tweet.medias) ? tweet.medias.filter(Boolean).slice(0, 4) : [];
+  const displayName = tweet.user?.name || tweet.user?.screen_name || 'Unknown';
+  const screenName = tweet.user?.screen_name || tweet.user_id || 'unknown';
   const engagement =
     tweet.favorite_count +
     tweet.retweet_count * 2 +
@@ -58,13 +60,13 @@ export function TweetCard({ tweet, contextLabel, compact = false }: TweetCardPro
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-1.5 text-sm">
                 <span className="truncate font-semibold text-slate-100">
-                  {tweet.user?.name || 'Unknown'}
+                  {displayName}
                 </span>
                 {tweet.user?.verified && (
                   <BadgeCheck className="h-4 w-4 flex-shrink-0 text-sky-400" />
                 )}
                 <span className="truncate text-slate-500">
-                  @{tweet.user?.screen_name || 'unknown'}
+                  @{screenName}
                 </span>
               </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
