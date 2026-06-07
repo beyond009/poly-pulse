@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Heart, Repeat2, MessageCircle, Eye, BadgeCheck, ExternalLink, RefreshCw, Flame } from 'lucide-react';
-import type { SocialHeat, Tweet } from '../types';
+import { Eye, RefreshCw, Flame } from 'lucide-react';
+import type { SocialHeat } from '../types';
 import { socialApi } from '../services/api';
-import { formatCompact, formatTimeAgo } from '../utils/formatters';
+import { TweetCard } from './TweetCard';
+import { formatCompact } from '../utils/formatters';
 
 interface SocialPanelProps {
   query: string;
@@ -13,53 +14,6 @@ const sentimentStyles: Record<string, { label: string; cls: string; dot: string 
   bearish: { label: '看跌', cls: 'text-rose-400 bg-rose-500/10 border-rose-500/20', dot: 'bg-rose-400' },
   neutral: { label: '中性', cls: 'text-slate-300 bg-slate-500/10 border-slate-500/20', dot: 'bg-slate-400' },
 };
-
-function TweetCard({ tweet }: { tweet: Tweet }) {
-  const url = tweet.user?.screen_name
-    ? `https://x.com/${tweet.user.screen_name}/status/${tweet.tweet_id}`
-    : `https://x.com/i/web/status/${tweet.tweet_id}`;
-  const created = tweet.created_at ? new Date(tweet.created_at) : null;
-
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block rounded-xl border border-slate-700/60 bg-slate-800/40 p-3.5 hover:bg-slate-800/80 transition-colors"
-    >
-      <div className="flex items-start gap-3">
-        {tweet.user?.profile_image_url ? (
-          <img src={tweet.user.profile_image_url} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-9 h-9 rounded-full bg-slate-700 flex-shrink-0" />
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="font-semibold text-slate-100 truncate">{tweet.user?.name || '匿名'}</span>
-            {tweet.user?.verified && <BadgeCheck className="w-4 h-4 text-sky-400 flex-shrink-0" />}
-            <span className="text-slate-500 truncate">@{tweet.user?.screen_name || 'unknown'}</span>
-            {created && (
-              <>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-500 flex-shrink-0">{formatTimeAgo(created)}</span>
-              </>
-            )}
-            <ExternalLink className="w-3.5 h-3.5 text-slate-600 ml-auto flex-shrink-0" />
-          </div>
-          <p className="mt-1 text-sm text-slate-300 leading-relaxed whitespace-pre-wrap break-words line-clamp-4">
-            {tweet.text}
-          </p>
-          <div className="mt-2.5 flex items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{formatCompact(tweet.favorite_count)}</span>
-            <span className="flex items-center gap-1"><Repeat2 className="w-3.5 h-3.5" />{formatCompact(tweet.retweet_count)}</span>
-            <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" />{formatCompact(tweet.reply_count)}</span>
-            <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{formatCompact(tweet.view_count)}</span>
-          </div>
-        </div>
-      </div>
-    </a>
-  );
-}
 
 export function SocialPanel({ query }: SocialPanelProps) {
   const [heat, setHeat] = useState<SocialHeat | null>(null);
